@@ -1,0 +1,76 @@
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Roboto", sans-serif;
+    line-height: 1;
+    letter-spacing: 0em;
+}
+
+body.kcBodyClass {
+    background: url(./assets/background.png) no-repeat center center fixed;
+    background-size: cover;
+}
+
+#kc-header {
+    padding-top: 15px;
+    padding-left: 35px;
+    margin: 0px;
+    text-align: start;
+}
+
+#kc-header-logo {
+    width: 170.6837158203125px;
+    height: 48px;
+}
+
+.kcFormCardClass {
+    width: 784px !important;
+    height: 496px !important;
+    max-width: none !important;
+    padding: 36px 90.5px !important;
+    margin-top: 70px;
+    border-top: none;
+    border-radius: 16px;
+    box-shadow: 0 1px 50px 6px rgba(0, 0, 0, 0.15);
+}
+
+#kc-page-title {
+    font-size: 40px;
+    font-weight: 700;
+    color: #175ead;
+    margin: 0px !important;
+}
+
+#kc-content-wrapper {
+    margin-top: 56px !important;
+}
+
+#kc-form-wrapper {
+    margin-top: 0px !important;
+}
+
+.kcFormGroupClass {
+    margin-bottom: 36px;
+}
+
+.kcFormOptionsWrapperClass {
+    font-size: 20px;
+    color: #5d9eea;
+}
+
+.kcButtonClass {
+    width: 603px;
+    height: 56px;
+    border-radius: 15px;
+    font-size: 24px;
+    font-weight: 700;
+}

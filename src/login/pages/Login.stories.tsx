@@ -358,3 +358,13 @@ export const WithSocialProvidersAndWithoutRememberMe: Story = {
         />
     )
 };
+
+export const WithoutRememberMeAndWithoutRegistration: Story = {
+    render: () => (
+        <KcPageStory
+            kcContext={{
+                realm: { rememberMe: false, registrationAllowed: false }
+            }}
+        />
+    )
+};
