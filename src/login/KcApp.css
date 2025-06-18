@@ -21,7 +21,6 @@ body.kcBodyClass {
 
 .kcFormCardClass {
     width: 784px !important;
-    height: 496px !important;
     max-width: none !important;
     padding: 36px 90.5px !important;
     margin-top: 70px;
@@ -79,6 +78,12 @@ body.kcBodyClass {
     color: #5d9eea;
 }
 
+.kcInputGroup {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e5e7eb;
+}
+
 #username {
     border: none;
     border-bottom: 2px solid #e5e7eb;
@@ -91,16 +96,23 @@ body.kcBodyClass {
 
 #password {
     border: none;
-    border-bottom: 2px solid #e5e7eb;
     border-radius: 0;
     background-color: transparent;
     color: #374151;
     outline: none;
     transition: all 0.2s ease-in-out;
+    width: 100%;
+}
+
+.kcFormPasswordVisibilityButtonClass {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
 }
 
 .pf-c-button::after {
     border: none !important;
-    border-bottom: 2px solid #e5e7eb !important;
-    margin-bottom: 6px;
 }

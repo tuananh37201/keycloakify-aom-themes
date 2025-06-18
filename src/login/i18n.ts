@@ -9,9 +9,9 @@ const { useI18n, ofTypeI18n } = i18nBuilder
             label: "Tiếng Việt",
             getMessages: () => import("./lang/i18n.vn")
         },
-        'en-US': {
-            label: "English",
-            getMessages: () => import("./lang/i18n.en")
+    }).withCustomTranslations({
+        en: {
+            invalidUsernameOrEmailMessage: "The username or password you entered is incorrect. Please try again.",
         }
     })
     .build();
