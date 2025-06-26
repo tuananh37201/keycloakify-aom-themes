@@ -23,9 +23,16 @@ import {
     Button,
     ExpandableSection,
     Form,
-    Spinner
+    Spinner,
+    Card,
+    CardBody,
+    CardTitle,
+    Grid,
+    GridItem,
+    Text,
+    TextVariants
 } from "../../shared/@patternfly/react-core";
-import { ExternalLinkSquareAltIcon } from "../../shared/@patternfly/react-icons";
+import { ExternalLinkSquareAltIcon, UserIcon } from "../../shared/@patternfly/react-icons";
 import { TFunction } from "i18next";
 import { useState } from "react";
 import { ErrorOption, useForm } from "react-hook-form";
@@ -44,6 +51,7 @@ export const PersonalInfo = () => {
     const context = useEnvironment<Environment>();
     const [userProfileMetadata, setUserProfileMetadata] = useState<UserProfileMetadata>();
     const [supportedLocales, setSupportedLocales] = useState<string[]>([]);
+    const [personalInfo, setPersonalInfo] = useState<UserRepresentation>();
     const form = useForm<UserRepresentation>({ mode: "onChange" });
     const { handleSubmit, reset, setValue, setError } = form;
     const { addAlert } = useAccountAlerts();
@@ -57,6 +65,7 @@ export const PersonalInfo = () => {
         ([personalInfo, supportedLocales]) => {
             setUserProfileMetadata(personalInfo.userProfileMetadata);
             setSupportedLocales(supportedLocales);
+            setPersonalInfo(personalInfo);
             reset(personalInfo);
             Object.entries(personalInfo.attributes || {}).forEach(([k, v]) =>
                 setValue(`attributes[${beerify(k)}]`, v)
@@ -64,129 +73,222 @@ export const PersonalInfo = () => {
         }
     );
 
-    const onSubmit = async (user: UserRepresentation) => {
-        try {
-            const attributes = Object.fromEntries(
-                Object.entries(user.attributes || {}).map(([k, v]) => [debeerify(k), v])
-            );
-            await savePersonalInfo(context, { ...user, attributes });
-            const locale = attributes["locale"]?.toString();
-            if (locale)
-                i18n.changeLanguage(locale, error => {
-                    if (error) {
-                        console.warn("Error(s) loading locale", locale, error);
-                    }
-                });
-            context.keycloak.updateToken();
-            addAlert(t("accountUpdatedMessage"));
-        } catch (error) {
-            addAlert(t("accountUpdatedError"), AlertVariant.danger);
-
-            setUserProfileServerError(
-                { responseData: { errors: error as any } },
-                (name: string | number, error: unknown) =>
-                    setError(name as string, error as ErrorOption),
-                ((key: TFuncKey, param?: object) => t(key, param as any)) as TFunction
-            );
-        }
-    };
-
-    if (!userProfileMetadata) {
+    if (!userProfileMetadata || !personalInfo) {
         return <Spinner />;
     }
 
-    const allFieldsReadOnly = () =>
-        userProfileMetadata?.attributes
-            ?.map(a => a.readOnly)
-            .reduce((p, c) => p && c, true);
+    // Custom styles
+    const styles = {
+        container: {
+            display: 'flex',
+            flexDirection: 'column' as const,
+            alignItems: 'center',
+            padding: '40px 20px',
+            backgroundColor: '#f5f5f5',
+            minHeight: '100vh'
+        },
+        avatar: {
+            width: '100px',
+            height: '100px',
+            borderRadius: '50%',
+            backgroundColor: '#6c757d',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '20px'
+        },
+        avatarIcon: {
+            fontSize: '40px',
+            color: 'white'
+        },
+        userName: {
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#333',
+            marginBottom: '30px'
+        },
+        infoCard: {
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            border: '1px solid #e0e0e0',
+            padding: '30px',
+            width: '100%',
+            maxWidth: '600px',
+            marginBottom: '20px'
+        },
+        cardTitle: {
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#333',
+            textAlign: 'center' as const,
+            marginBottom: '25px',
+            paddingBottom: '15px',
+            borderBottom: '1px solid #e0e0e0'
+        },
+        infoGrid: {
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px'
+        },
+        infoItem: {
+            display: 'flex',
+            flexDirection: 'column' as const
+        },
+        label: {
+            fontSize: '14px',
+            color: '#666',
+            marginBottom: '5px',
+            fontWeight: '500'
+        },
+        value: {
+            fontSize: '16px',
+            color: '#333',
+            fontWeight: '400'
+        },
+        changePasswordBtn: {
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s'
+        }
+    };
 
-    const {
-        updateEmailFeatureEnabled,
-        updateEmailActionEnabled,
-        isRegistrationEmailAsUsername,
-        isEditUserNameAllowed
-    } = context.environment.features;
+    // Function to get display name
+    const getDisplayName = () => {
+        if (personalInfo.firstName && personalInfo.lastName) {
+            return `${personalInfo.firstName} ${personalInfo.lastName}`;
+        }
+        return personalInfo.username || 'Người dùng';
+    };
+
+    // Function to get user roles
+    const getUserRoles = () => {
+        const roles = personalInfo.attributes?.roles || context.keycloak?.realmAccess?.roles || [];
+        return Array.isArray(roles) ? roles.join(', ') : roles || 'Không có';
+    };
+
+    // Function to get phone number
+    const getPhoneNumber = () => {
+        return personalInfo.attributes?.phone || 
+               personalInfo.attributes?.phoneNumber || 
+               personalInfo.attributes?.mobile || 
+               'Chưa cập nhật';
+    };
+
+    // Function to get department
+    const getDepartment = () => {
+        return personalInfo.attributes?.department || 
+               personalInfo.attributes?.phongban || 
+               'Chưa cập nhật';
+    };
+
     return (
-        <Page title={t("personalInfo")} description={t("personalInfoDescription")}>
-            <Form isHorizontal onSubmit={handleSubmit(onSubmit)}>
-                <UserProfileFields
-                    form={form}
-                    userProfileMetadata={userProfileMetadata}
-                    supportedLocales={supportedLocales}
-                    currentLocale={context.environment.locale}
-                    t={
-                        ((key: unknown, params) =>
-                            t(key as TFuncKey, params as any)) as TFunction
-                    }
-                    renderer={attribute =>
-                        attribute.name === "email" &&
-                        updateEmailFeatureEnabled &&
-                        updateEmailActionEnabled &&
-                        (!isRegistrationEmailAsUsername || isEditUserNameAllowed) ? (
-                            <Button
-                                id="update-email-btn"
-                                variant="link"
-                                onClick={() =>
-                                    context.keycloak.login({ action: "UPDATE_EMAIL" })
-                                }
-                                icon={<ExternalLinkSquareAltIcon />}
-                                iconPosition="right"
-                            >
-                                {t("updateEmail")}
-                            </Button>
-                        ) : undefined
-                    }
-                />
-                {!allFieldsReadOnly() && (
-                    <ActionGroup>
-                        <Button
-                            data-testid="save"
-                            type="submit"
-                            id="save-btn"
-                            variant="primary"
-                        >
-                            {t("save")}
-                        </Button>
-                        <Button
-                            data-testid="cancel"
-                            id="cancel-btn"
-                            variant="link"
-                            onClick={() => reset()}
-                        >
-                            {t("cancel")}
-                        </Button>
-                    </ActionGroup>
-                )}
-                {context.environment.features.deleteAccountAllowed && (
-                    <ExpandableSection
-                        data-testid="delete-account"
-                        toggleText={t("deleteAccount")}
-                    >
-                        <Alert
-                            isInline
-                            title={t("deleteAccount")}
-                            variant="danger"
-                            actionLinks={
-                                <Button
-                                    id="delete-account-btn"
-                                    variant="danger"
-                                    onClick={() =>
-                                        context.keycloak.login({
-                                            action: "delete_account"
-                                        })
-                                    }
-                                    className="delete-button"
-                                >
-                                    {t("delete")}
-                                </Button>
-                            }
-                        >
-                            {t("deleteAccountWarning")}
-                        </Alert>
-                    </ExpandableSection>
-                )}
-            </Form>
-        </Page>
+        <div style={styles.container}>
+            {/* Avatar Section */}
+            <div style={styles.avatar}>
+                <UserIcon style={styles.avatarIcon} />
+            </div>
+
+            {/* User Name */}
+            <div style={styles.userName}>
+                {getDisplayName()}
+            </div>
+
+            {/* Personal Info Card */}
+            <div style={styles.infoCard}>
+                <div style={styles.cardTitle}>
+                    Thông tin cá nhân
+                </div>
+                
+                <div style={styles.infoGrid}>
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Họ và tên</div>
+                        <div style={styles.value}>{getDisplayName()}</div>
+                    </div>
+                    
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Email</div>
+                        <div style={styles.value}>{personalInfo.email || 'Chưa cập nhật'}</div>
+                    </div>
+                    
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Chức vụ</div>
+                        <div style={styles.value}>{getUserRoles()}</div>
+                    </div>
+                    
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Số điện thoại</div>
+                        <div style={styles.value}>{getPhoneNumber()}</div>
+                    </div>
+                    
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Phòng ban</div>
+                        <div style={styles.value}>{getDepartment()}</div>
+                    </div>
+                    
+                    <div style={styles.infoItem}>
+                        <div style={styles.label}>Trạng thái</div>
+                        <div style={styles.value}>
+                            {personalInfo.enabled ? 'Hoạt động' : 'Bị khóa'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Change Password Button */}
+            <button 
+                style={styles.changePasswordBtn}
+                onClick={() => context.keycloak.login({ action: 'UPDATE_PASSWORD' })}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
+            >
+                Đổi mật khẩu
+            </button>
+
+            {/* Optional: Additional Information Card */}
+            {(personalInfo.attributes?.employeeId || personalInfo.createdTimestamp) && (
+                <div style={{...styles.infoCard, marginTop: '20px'}}>
+                    <div style={styles.cardTitle}>
+                        Thông tin bổ sung
+                    </div>
+                    
+                    <div style={styles.infoGrid}>
+                        {personalInfo.attributes?.employeeId && (
+                            <div style={styles.infoItem}>
+                                <div style={styles.label}>Mã nhân viên</div>
+                                <div style={styles.value}>{personalInfo.attributes.employeeId}</div>
+                            </div>
+                        )}
+                        
+                        {personalInfo.createdTimestamp && (
+                            <div style={styles.infoItem}>
+                                <div style={styles.label}>Ngày tạo tài khoản</div>
+                                <div style={styles.value}>
+                                    {new Date(personalInfo.createdTimestamp).toLocaleDateString('vi-VN')}
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div style={styles.infoItem}>
+                            <div style={styles.label}>Email đã xác thực</div>
+                            <div style={styles.value}>
+                                {personalInfo.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                            </div>
+                        </div>
+                        
+                        <div style={styles.infoItem}>
+                            <div style={styles.label}>Tên đăng nhập</div>
+                            <div style={styles.value}>{personalInfo.username}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

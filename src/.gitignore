@@ -4,6 +4,7 @@
 # account/routes.tsx
 # account/personal-info/PersonalInfo.tsx
 # account/root/PageNav.tsx
+# account/root/Root.tsx
 # === Owned files end =====
 
 # === @keycloakify/keycloak-ui-shared v260200.0.0 ===
@@ -146,7 +147,6 @@
 /account/resources/ShareTheResource.tsx
 /account/root/header.module.css
 /account/root/Header.tsx
-/account/root/Root.tsx
 /account/utils/formatDate.ts
 /account/utils/joinPath.ts
 /account/utils/useAccountAlerts.ts
