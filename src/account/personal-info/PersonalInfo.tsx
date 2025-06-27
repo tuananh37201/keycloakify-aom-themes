@@ -1,12 +1,8 @@
 /**
- * This file has been claimed for ownership from @keycloakify/keycloak-account-ui version 260200.1.3.
- * To relinquish ownership and restore this file to its original content, run the following command:
- *
- * $ npx keycloakify own --path "account/personal-info/PersonalInfo.tsx" --revert
+ * PersonalInfo with URL locale detection for Flutter WebView
  */
 
 /* eslint-disable */
-
 // @ts-nocheck
 
 import {
@@ -34,7 +30,7 @@ import {
 } from "../../shared/@patternfly/react-core";
 import { ExternalLinkSquareAltIcon, UserIcon } from "../../shared/@patternfly/react-icons";
 import { TFunction } from "i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ErrorOption, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import 'boxicons';
@@ -48,15 +44,131 @@ import { useAccountAlerts } from "../utils/useAccountAlerts";
 import { usePromise } from "../utils/usePromise";
 import './PersonalInfo.css';
 
+// Translations
+const translations = {
+  en: {
+    personalInformation: "Personal Information",
+    additionalInformation: "Additional Information", 
+    fullName: "Full Name",
+    email: "Email",
+    position: "Position",
+    phoneNumber: "Phone Number",
+    department: "Department",
+    employeeId: "Employee ID",
+    accountCreated: "Account Created",
+    emailVerified: "Email Verified",
+    username: "Username",
+    accountStatus: "Account Status",
+    changePassword: "Change Password",
+    defaultUser: "User",
+    noRole: "None",
+    notUpdated: "Not updated",
+    verified: "Verified",
+    notVerified: "Not verified",
+    active: "Active",
+    locked: "Locked"
+  },
+  vi: {
+    personalInformation: "Thông tin cá nhân",
+    additionalInformation: "Thông tin bổ sung",
+    fullName: "Họ và tên",
+    email: "Email", 
+    position: "Chức vụ",
+    phoneNumber: "Số điện thoại",
+    department: "Phòng ban",
+    employeeId: "Mã nhân viên",
+    accountCreated: "Ngày tạo tài khoản",
+    emailVerified: "Email đã xác thực",
+    username: "Tên đăng nhập",
+    accountStatus: "Trạng thái",
+    changePassword: "Đổi mật khẩu",
+    defaultUser: "Người dùng",
+    noRole: "Không có",
+    notUpdated: "Chưa cập nhật",
+    verified: "Đã xác thực",
+    notVerified: "Chưa xác thực",
+    active: "Hoạt động",
+    locked: "Bị khóa"
+  }
+};
+
 export const PersonalInfo = () => {
     const { t } = useTranslation();
     const context = useEnvironment<Environment>();
     const [userProfileMetadata, setUserProfileMetadata] = useState<UserProfileMetadata>();
     const [supportedLocales, setSupportedLocales] = useState<string[]>([]);
     const [personalInfo, setPersonalInfo] = useState<UserRepresentation>();
+    const [currentLocale, setCurrentLocale] = useState<'en' | 'vi'>('vi');
     const form = useForm<UserRepresentation>({ mode: "onChange" });
     const { handleSubmit, reset, setValue, setError } = form;
     const { addAlert } = useAccountAlerts();
+
+    // Function to get URL parameter
+    const getUrlParameter = (name: string): string | null => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    };
+
+    // Function to detect language from multiple sources
+    const detectLanguage = (): 'en' | 'vi' => {
+        // 1. Check URL parameter (từ Flutter app)
+        const urlLocale = getUrlParameter('kc_locale') || getUrlParameter('locale') || getUrlParameter('lang');
+        if (urlLocale) {
+            const detectedLang = urlLocale.startsWith('vi') ? 'vi' : 'en';
+            return detectedLang;
+        }
+
+        // 2. Check localStorage
+        const savedLang = localStorage.getItem('app-locale');
+        if (savedLang && (savedLang === 'en' || savedLang === 'vi')) {
+            return savedLang as 'en' | 'vi';
+        }
+
+        // 3. Check user agent language (for WebView)
+        const userAgent = navigator.userAgent;
+        if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
+            // Trong WebView, thử detect từ accept-language header
+            const browserLang = navigator.language || navigator.languages?.[0] || 'vi';
+            const detectedLang = browserLang.startsWith('vi') ? 'vi' : 'en';
+            return detectedLang;
+        }
+
+        return 'en';
+    };
+
+    // Initialize locale
+    useEffect(() => {
+        const detectedLang = detectLanguage();
+        setCurrentLocale(detectedLang);
+        localStorage.setItem('app-locale', detectedLang);
+    }, []);
+
+    // Listen for postMessage from Flutter app
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'SET_LOCALE') {
+                const newLocale = event.data.locale;
+                if (newLocale === 'en' || newLocale === 'vi') {
+                    setCurrentLocale(newLocale);
+                    localStorage.setItem('app-locale', newLocale);
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    // Translation function
+    const translate = (key: keyof typeof translations.en): string => {
+        return translations[currentLocale]?.[key] || translations.vi[key] || key;
+    };
+
+    // Format date based on locale
+    const formatDate = (timestamp: number): string => {
+        const locale = currentLocale === 'en' ? 'en-US' : 'vi-VN';
+        return new Date(timestamp).toLocaleDateString(locale);
+    };
 
     usePromise(
         signal =>
@@ -84,13 +196,14 @@ export const PersonalInfo = () => {
         if (personalInfo.firstName && personalInfo.lastName) {
             return `${personalInfo.firstName} ${personalInfo.lastName}`;
         }
-        return personalInfo.username || 'Người dùng';
+        return personalInfo.username || translate('defaultUser');
     };
 
     // Function to get user roles
     const getUserRoles = () => {
         const roles = personalInfo.attributes?.roles || context.keycloak?.realmAccess?.roles || [];
-        return Array.isArray(roles) ? roles.join(', ') : roles || 'Không có';
+        const roleText = Array.isArray(roles) ? roles.join(', ') : roles;
+        return roleText || translate('noRole');
     };
 
     // Function to get phone number
@@ -98,14 +211,14 @@ export const PersonalInfo = () => {
         return personalInfo.attributes?.phone || 
                personalInfo.attributes?.phoneNumber || 
                personalInfo.attributes?.mobile || 
-               'Chưa cập nhật';
+               translate('notUpdated');
     };
 
     // Function to get department
     const getDepartment = () => {
         return personalInfo.attributes?.department || 
                personalInfo.attributes?.phongban || 
-               'Chưa cập nhật';
+               translate('notUpdated');
     };
 
     return (
@@ -129,35 +242,34 @@ export const PersonalInfo = () => {
             {/* Personal Info Card */}
             <div className="info-card">
                 <div className="card-title">
-                    Thông tin cá nhân
+                    {translate('personalInformation')}
                 </div>
                 
                 <div className="info-grid">
                     <div className="info-item">
-                        <div className="label">Họ và tên</div>
+                        <div className="label">{translate('fullName')}</div>
                         <div className="value">{getDisplayName()}</div>
                     </div>
                     
                     <div className="info-item">
-                        <div className="label">Email</div>
-                        <div className="value">{personalInfo.email || 'Chưa cập nhật'}</div>
+                        <div className="label">{translate('email')}</div>
+                        <div className="value">{personalInfo.email || translate('notUpdated')}</div>
                     </div>
                     
                     <div className="info-item">
-                        <div className="label">Chức vụ</div>
+                        <div className="label">{translate('position')}</div>
                         <div className="value">{getUserRoles()}</div>
                     </div>
                     
                     <div className="info-item">
-                        <div className="label">Số điện thoại</div>
+                        <div className="label">{translate('phoneNumber')}</div>
                         <div className="value">{getPhoneNumber()}</div>
                     </div>
                     
                     <div className="info-item">
-                        <div className="label">Phòng ban</div>
+                        <div className="label">{translate('department')}</div>
                         <div className="value">{getDepartment()}</div>
                     </div>
-                                 
                 </div>
             </div>
 
@@ -166,52 +278,57 @@ export const PersonalInfo = () => {
                 className="change-password-btn"
                 onClick={() => context.keycloak.login({ action: 'UPDATE_PASSWORD' })}
             >
-                Đổi mật khẩu
+                {translate('changePassword')}
             </button>
 
-            {/* Optional: Additional Information Card */}
+            {/* Additional Information Card */}
             {(personalInfo.attributes?.employeeId || personalInfo.createdTimestamp) && (
                 <div className="info-card additional-info">
                     <div className="card-title">
-                        Thông tin bổ sung
+                        {translate('additionalInformation')}
                     </div>
                     
                     <div className="info-grid">
                         {personalInfo.attributes?.employeeId && (
                             <div className="info-item">
-                                <div className="label">Mã nhân viên</div>
+                                <div className="label">{translate('employeeId')}</div>
                                 <div className="value">{personalInfo.attributes.employeeId}</div>
                             </div>
                         )}
                         
                         {personalInfo.createdTimestamp && (
                             <div className="info-item">
-                                <div className="label">Ngày tạo tài khoản</div>
+                                <div className="label">{translate('accountCreated')}</div>
                                 <div className="value">
-                                    {new Date(personalInfo.createdTimestamp).toLocaleDateString('vi-VN')}
+                                    {formatDate(personalInfo.createdTimestamp)}
                                 </div>
                             </div>
                         )}
                         
                         <div className="info-item">
-                            <div className="label">Email đã xác thực</div>
+                            <div className="label">{translate('emailVerified')}</div>
                             <div className="value">
-                                {personalInfo.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                                {personalInfo.emailVerified ? 
+                                    translate('verified') : 
+                                    translate('notVerified')
+                                }
                             </div>
                         </div>
                         
                         <div className="info-item">
-                            <div className="label">Tên đăng nhập</div>
+                            <div className="label">{translate('username')}</div>
                             <div className="value">{personalInfo.username}</div>
                         </div>
 
                         <div className="info-item">
-                            <div className="label">Trạng thái</div>
-                             <div className="value">
-                                {personalInfo.enabled ? 'Hoạt động' : 'Bị khóa'}
-                             </div>
+                            <div className="label">{translate('accountStatus')}</div>
+                            <div className="value">
+                                {personalInfo.enabled ? 
+                                    translate('active') : 
+                                    translate('locked')
+                                }
+                            </div>
                         </div>
-
                     </div>
                 </div>
             )}
