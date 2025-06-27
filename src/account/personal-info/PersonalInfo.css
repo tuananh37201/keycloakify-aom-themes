@@ -5,6 +5,7 @@
 * {
     font-family: "Roboto", sans-serif;
     color: #0d3a52;
+    background-color: #f8f8f8;
 }
 
 .personal-info-container {
@@ -12,14 +13,12 @@
     flex-direction: column;
     align-items: center;
     padding-top: 20px;
-    background-color: white;
     min-height: 100vh;
 }
 
 .avatar {
     width: 160px;
     height: 160px;
-    background-color: white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,7 +37,6 @@
 }
 
 .info-card {
-    background-color: white;
     border-radius: 12px;
     border: 1px solid #828c93;
     padding-top: 32px;
@@ -60,7 +58,7 @@
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    column-gap: 32px;
     width: 630px;
     margin: 0 auto;
 }
