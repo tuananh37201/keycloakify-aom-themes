@@ -37,6 +37,7 @@ import { TFunction } from "i18next";
 import { useState } from "react";
 import { ErrorOption, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import 'boxicons';
 
 import { getPersonalInfo, getSupportedLocales, savePersonalInfo } from "../api/methods";
 import { UserProfileMetadata, UserRepresentation } from "../api/representations";
@@ -45,6 +46,7 @@ import type { Environment } from "../environment";
 import { TFuncKey, i18n } from "../i18n";
 import { useAccountAlerts } from "../utils/useAccountAlerts";
 import { usePromise } from "../utils/usePromise";
+import './PersonalInfo.css';
 
 export const PersonalInfo = () => {
     const { t } = useTranslation();
@@ -77,87 +79,6 @@ export const PersonalInfo = () => {
         return <Spinner />;
     }
 
-    // Custom styles
-    const styles = {
-        container: {
-            display: 'flex',
-            flexDirection: 'column' as const,
-            alignItems: 'center',
-            padding: '40px 20px',
-            backgroundColor: '#f5f5f5',
-            minHeight: '100vh'
-        },
-        avatar: {
-            width: '100px',
-            height: '100px',
-            borderRadius: '50%',
-            backgroundColor: '#6c757d',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '20px'
-        },
-        avatarIcon: {
-            fontSize: '40px',
-            color: 'white'
-        },
-        userName: {
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#333',
-            marginBottom: '30px'
-        },
-        infoCard: {
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '1px solid #e0e0e0',
-            padding: '30px',
-            width: '100%',
-            maxWidth: '600px',
-            marginBottom: '20px'
-        },
-        cardTitle: {
-            fontSize: '18px',
-            fontWeight: 'bold',
-            color: '#333',
-            textAlign: 'center' as const,
-            marginBottom: '25px',
-            paddingBottom: '15px',
-            borderBottom: '1px solid #e0e0e0'
-        },
-        infoGrid: {
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '20px'
-        },
-        infoItem: {
-            display: 'flex',
-            flexDirection: 'column' as const
-        },
-        label: {
-            fontSize: '14px',
-            color: '#666',
-            marginBottom: '5px',
-            fontWeight: '500'
-        },
-        value: {
-            fontSize: '16px',
-            color: '#333',
-            fontWeight: '400'
-        },
-        changePasswordBtn: {
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s'
-        }
-    };
-
     // Function to get display name
     const getDisplayName = () => {
         if (personalInfo.firstName && personalInfo.lastName) {
@@ -188,103 +109,109 @@ export const PersonalInfo = () => {
     };
 
     return (
-        <div style={styles.container}>
+        <div className="personal-info-container">
             {/* Avatar Section */}
-            <div style={styles.avatar}>
-                <UserIcon style={styles.avatarIcon} />
+            <div className="avatar">
+                <box-icon
+                    name='user-circle'
+                    type='solid'
+                    size="lg"
+                    className="avatar-icon"
+                    color="#828c93"
+                ></box-icon>
             </div>
 
             {/* User Name */}
-            <div style={styles.userName}>
+            <div className="user-name">
                 {getDisplayName()}
             </div>
 
             {/* Personal Info Card */}
-            <div style={styles.infoCard}>
-                <div style={styles.cardTitle}>
+            <div className="info-card">
+                <div className="card-title">
                     Thông tin cá nhân
                 </div>
                 
-                <div style={styles.infoGrid}>
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Họ và tên</div>
-                        <div style={styles.value}>{getDisplayName()}</div>
+                <div className="info-grid">
+                    <div className="info-item">
+                        <div className="label">Họ và tên</div>
+                        <div className="value">{getDisplayName()}</div>
                     </div>
                     
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Email</div>
-                        <div style={styles.value}>{personalInfo.email || 'Chưa cập nhật'}</div>
+                    <div className="info-item">
+                        <div className="label">Email</div>
+                        <div className="value">{personalInfo.email || 'Chưa cập nhật'}</div>
                     </div>
                     
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Chức vụ</div>
-                        <div style={styles.value}>{getUserRoles()}</div>
+                    <div className="info-item">
+                        <div className="label">Chức vụ</div>
+                        <div className="value">{getUserRoles()}</div>
                     </div>
                     
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Số điện thoại</div>
-                        <div style={styles.value}>{getPhoneNumber()}</div>
+                    <div className="info-item">
+                        <div className="label">Số điện thoại</div>
+                        <div className="value">{getPhoneNumber()}</div>
                     </div>
                     
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Phòng ban</div>
-                        <div style={styles.value}>{getDepartment()}</div>
+                    <div className="info-item">
+                        <div className="label">Phòng ban</div>
+                        <div className="value">{getDepartment()}</div>
                     </div>
-                    
-                    <div style={styles.infoItem}>
-                        <div style={styles.label}>Trạng thái</div>
-                        <div style={styles.value}>
-                            {personalInfo.enabled ? 'Hoạt động' : 'Bị khóa'}
-                        </div>
-                    </div>
+                                 
                 </div>
             </div>
 
             {/* Change Password Button */}
             <button 
-                style={styles.changePasswordBtn}
+                className="change-password-btn"
                 onClick={() => context.keycloak.login({ action: 'UPDATE_PASSWORD' })}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
             >
                 Đổi mật khẩu
             </button>
 
             {/* Optional: Additional Information Card */}
             {(personalInfo.attributes?.employeeId || personalInfo.createdTimestamp) && (
-                <div style={{...styles.infoCard, marginTop: '20px'}}>
-                    <div style={styles.cardTitle}>
+                <div className="info-card additional-info">
+                    <div className="card-title">
                         Thông tin bổ sung
                     </div>
                     
-                    <div style={styles.infoGrid}>
+                    <div className="info-grid">
                         {personalInfo.attributes?.employeeId && (
-                            <div style={styles.infoItem}>
-                                <div style={styles.label}>Mã nhân viên</div>
-                                <div style={styles.value}>{personalInfo.attributes.employeeId}</div>
+                            <div className="info-item">
+                                <div className="label">Mã nhân viên</div>
+                                <div className="value">{personalInfo.attributes.employeeId}</div>
                             </div>
                         )}
                         
                         {personalInfo.createdTimestamp && (
-                            <div style={styles.infoItem}>
-                                <div style={styles.label}>Ngày tạo tài khoản</div>
-                                <div style={styles.value}>
+                            <div className="info-item">
+                                <div className="label">Ngày tạo tài khoản</div>
+                                <div className="value">
                                     {new Date(personalInfo.createdTimestamp).toLocaleDateString('vi-VN')}
                                 </div>
                             </div>
                         )}
                         
-                        <div style={styles.infoItem}>
-                            <div style={styles.label}>Email đã xác thực</div>
-                            <div style={styles.value}>
+                        <div className="info-item">
+                            <div className="label">Email đã xác thực</div>
+                            <div className="value">
                                 {personalInfo.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
                             </div>
                         </div>
                         
-                        <div style={styles.infoItem}>
-                            <div style={styles.label}>Tên đăng nhập</div>
-                            <div style={styles.value}>{personalInfo.username}</div>
+                        <div className="info-item">
+                            <div className="label">Tên đăng nhập</div>
+                            <div className="value">{personalInfo.username}</div>
                         </div>
+
+                        <div className="info-item">
+                            <div className="label">Trạng thái</div>
+                             <div className="value">
+                                {personalInfo.enabled ? 'Hoạt động' : 'Bị khóa'}
+                             </div>
+                        </div>
+
                     </div>
                 </div>
             )}

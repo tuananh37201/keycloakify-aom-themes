@@ -1,8 +1,10 @@
 /**
- * This file has been claimed for ownership from @keycloakify/keycloak-account-ui version 260200.1.3.
- * To relinquish ownership and restore this file to its original content, run the following command:
+ * WARNING: Before modifying this file, run the following command:
  *
- * $ npx keycloakify own --path "account/root/PageNav.tsx" --revert
+ * $ npx keycloakify own --path "account/root/PageNav.tsx"
+ *
+ * This file is provided by @keycloakify/keycloak-account-ui version 260200.1.3.
+ * It was copied into your repository by the postinstall script: `keycloakify sync-extensions`.
  */
 
 /* eslint-disable */
@@ -55,8 +57,7 @@ export const PageNav = () => {
     const context = useEnvironment<Environment>();
 
     usePromise(signal => fetchContentJson({ signal, context }), setMenuItems);
-    return null;
-    (
+    return (
         <PageSidebar>
             <PageSidebarBody>
                 <Nav>
