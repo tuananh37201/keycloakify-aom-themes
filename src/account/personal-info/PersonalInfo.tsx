@@ -1,7 +1,3 @@
-/**
- * PersonalInfo with URL locale detection for Flutter WebView
- */
-
 /* eslint-disable */
 // @ts-nocheck
 
@@ -43,8 +39,9 @@ import { TFuncKey, i18n } from "../i18n";
 import { useAccountAlerts } from "../utils/useAccountAlerts";
 import { usePromise } from "../utils/usePromise";
 import './PersonalInfo.css';
+import { localeDetector } from "../../shared/utils/locale-detection";
 
-// Translations
+// KEEP ORIGINAL: Exact same translations object
 const translations = {
   en: {
     personalInformation: "Personal Information",
@@ -98,73 +95,25 @@ export const PersonalInfo = () => {
     const [userProfileMetadata, setUserProfileMetadata] = useState<UserProfileMetadata>();
     const [supportedLocales, setSupportedLocales] = useState<string[]>([]);
     const [personalInfo, setPersonalInfo] = useState<UserRepresentation>();
-    const [currentLocale, setCurrentLocale] = useState<'en' | 'vi'>('vi');
+    
+    const [currentLocale, setCurrentLocale] = useState<'en' | 'vi'>(() => {
+        const detected = localeDetector.detectLocale();
+        return detected === 'vi' ? 'vi' : 'en';
+    });
+    
+    useEffect(() => {
+        localeDetector.saveLocale(currentLocale);
+    }, [currentLocale]);
+    
     const form = useForm<UserRepresentation>({ mode: "onChange" });
     const { handleSubmit, reset, setValue, setError } = form;
     const { addAlert } = useAccountAlerts();
 
-    // Function to get URL parameter
-    const getUrlParameter = (name: string): string | null => {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-    };
 
-    // Function to detect language from multiple sources
-    const detectLanguage = (): 'en' | 'vi' => {
-        // 1. Check URL parameter (từ Flutter app)
-        const urlLocale = getUrlParameter('kc_locale') || getUrlParameter('locale') || getUrlParameter('lang');
-        if (urlLocale) {
-            const detectedLang = urlLocale.startsWith('vi') ? 'vi' : 'en';
-            return detectedLang;
-        }
-
-        // 2. Check localStorage
-        const savedLang = localStorage.getItem('app-locale');
-        if (savedLang && (savedLang === 'en' || savedLang === 'vi')) {
-            return savedLang as 'en' | 'vi';
-        }
-
-        // 3. Check user agent language (for WebView)
-        const userAgent = navigator.userAgent;
-        if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
-            // Trong WebView, thử detect từ accept-language header
-            const browserLang = navigator.language || navigator.languages?.[0] || 'vi';
-            const detectedLang = browserLang.startsWith('vi') ? 'vi' : 'en';
-            return detectedLang;
-        }
-
-        return 'en';
-    };
-
-    // Initialize locale
-    useEffect(() => {
-        const detectedLang = detectLanguage();
-        setCurrentLocale(detectedLang);
-        localStorage.setItem('app-locale', detectedLang);
-    }, []);
-
-    // Listen for postMessage from Flutter app
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data && event.data.type === 'SET_LOCALE') {
-                const newLocale = event.data.locale;
-                if (newLocale === 'en' || newLocale === 'vi') {
-                    setCurrentLocale(newLocale);
-                    localStorage.setItem('app-locale', newLocale);
-                }
-            }
-        };
-
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, []);
-
-    // Translation function
     const translate = (key: keyof typeof translations.en): string => {
         return translations[currentLocale]?.[key] || translations.vi[key] || key;
     };
 
-    // Format date based on locale
     const formatDate = (timestamp: number): string => {
         const locale = currentLocale === 'en' ? 'en-US' : 'vi-VN';
         return new Date(timestamp).toLocaleDateString(locale);
@@ -191,7 +140,6 @@ export const PersonalInfo = () => {
         return <Spinner />;
     }
 
-    // Function to get display name
     const getDisplayName = () => {
         if (personalInfo.firstName && personalInfo.lastName) {
             return `${personalInfo.firstName} ${personalInfo.lastName}`;
@@ -199,14 +147,12 @@ export const PersonalInfo = () => {
         return personalInfo.username || translate('defaultUser');
     };
 
-    // Function to get user roles
     const getUserRoles = () => {
         const roles = personalInfo.attributes?.roles || context.keycloak?.realmAccess?.roles || [];
         const roleText = Array.isArray(roles) ? roles.join(', ') : roles;
         return roleText || translate('noRole');
     };
 
-    // Function to get phone number
     const getPhoneNumber = () => {
         return personalInfo.attributes?.phone || 
                personalInfo.attributes?.phoneNumber || 
@@ -214,7 +160,6 @@ export const PersonalInfo = () => {
                translate('notUpdated');
     };
 
-    // Function to get department
     const getDepartment = () => {
         return personalInfo.attributes?.department || 
                personalInfo.attributes?.phongban || 
@@ -223,7 +168,6 @@ export const PersonalInfo = () => {
 
     return (
         <div className="personal-info-container">
-            {/* Avatar Section */}
             <div className="avatar">
                 <box-icon
                     name='user-circle'
@@ -234,12 +178,10 @@ export const PersonalInfo = () => {
                 ></box-icon>
             </div>
 
-            {/* User Name */}
             <div className="user-name">
                 {getDisplayName()}
             </div>
 
-            {/* Personal Info Card */}
             <div className="info-card">
                 <div className="card-title">
                     {translate('personalInformation')}
@@ -273,7 +215,6 @@ export const PersonalInfo = () => {
                 </div>
             </div>
 
-            {/* Change Password Button */}
             <button 
                 className="change-password-btn"
                 onClick={() => context.keycloak.login({ action: 'UPDATE_PASSWORD' })}
@@ -281,7 +222,6 @@ export const PersonalInfo = () => {
                 {translate('changePassword')}
             </button>
 
-            {/* Additional Information Card */}
             {(personalInfo.attributes?.employeeId || personalInfo.createdTimestamp) && (
                 <div className="info-card additional-info">
                     <div className="card-title">

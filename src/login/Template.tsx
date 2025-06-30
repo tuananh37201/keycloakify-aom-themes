@@ -1,3 +1,4 @@
+// src/login/Template.tsx
 import { useEffect } from "react";
 import { clsx } from "keycloakify/tools/clsx";
 import { kcSanitize } from "keycloakify/lib/kcSanitize";
@@ -7,6 +8,7 @@ import { useSetClassName } from "keycloakify/tools/useSetClassName";
 import { useInitialize } from "keycloakify/login/Template.useInitialize";
 import type { I18n } from "./i18n";
 import type { KcContext } from "./KcContext";
+import { localeDetector } from "../shared/utils/locale-detection";
 import logo from "./assets/logo.png";
 
 export default function Template(props: TemplateProps<KcContext, I18n>) {
@@ -27,12 +29,19 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
     } = props;
 
     const { kcClsx } = getKcClsx({ doUseDefaultCss, classes });
-
     const { msg, msgStr, currentLanguage, enabledLanguages } = i18n;
-
     const { realm, auth, url, message, isAppInitiatedAction } = kcContext;
 
     useEffect(() => {
+        const detectedLocale = localeDetector.detectLocale();
+        const keycloakLocale = localeDetector.toKeycloakLocale(detectedLocale);
+        
+        const currentUrl = new URL(window.location.href);
+        if (!currentUrl.searchParams.has('kc_locale')) {
+            currentUrl.searchParams.set('kc_locale', keycloakLocale);
+            window.history.replaceState({}, '', currentUrl.toString());
+        }
+        
         document.title = documentTitle ?? msgStr("loginTitle", realm.displayName);
     }, []);
 
@@ -55,11 +64,12 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
     return (
         <div className={kcClsx("kcLoginClass")}>
             <div id="kc-header" className={kcClsx("kcHeaderClass")}>
-                    <img id="kc-header-logo" src={logo} alt="logo" />
+                <img id="kc-header-logo" src={logo} alt="logo" />
             </div>
             <div className={kcClsx("kcFormCardClass")}>
                 <header className={kcClsx("kcFormHeaderClass")}>
-                    {enabledLanguages.length > 1 && (
+                    {/* TODO: Uncomment khi muốn app flutter có chức năng chọn ngôn ngữ */}
+                    {/* {enabledLanguages.length > 1 && (
                         <div className={kcClsx("kcLocaleMainClass")} id="kc-locale">
                             <div id="kc-locale-wrapper" className={kcClsx("kcLocaleWrapperClass")}>
                                 <div id="kc-locale-dropdown" className={clsx("menu-button-links", kcClsx("kcLocaleDropDownClass"))}>
@@ -92,7 +102,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                                 </div>
                             </div>
                         </div>
-                    )}
+                    )} */}
                     {(() => {
                         const node = !(auth !== undefined && auth.showUsername && !auth.showResetCredentials) ? (
                             <h1 id="kc-page-title">{headerNode}</h1>
@@ -127,7 +137,6 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
                 </header>
                 <div id="kc-content">
                     <div id="kc-content-wrapper">
-                        {/* App-initiated actions should not see warning messages about the need to complete the action during login. */}
                         {displayMessage && message !== undefined && (message.type !== "warning" || !isAppInitiatedAction) && (
                             <div
                                 className={clsx(
