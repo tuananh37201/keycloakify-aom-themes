@@ -1,0 +1,106 @@
+/* Import Roboto font */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+
+/* Apply Roboto font to all elements */
+* {
+    font-family: "Roboto", sans-serif;
+    color: #0d3a52;
+    background-color: #f8f8f8;
+}
+
+.personal-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    min-height: 100vh;
+}
+
+.avatar {
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.avatar box-icon {
+    width: 133px !important;
+    height: 133px !important;
+}
+
+.user-name {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.info-card {
+    border-radius: 12px;
+    border: 1px solid #828c93;
+    padding-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 848px;
+    height: 304px;
+    margin-bottom: 32px;
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 100px;
+    width: 630px;
+    margin: 0 auto;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: row;
+}
+
+.label {
+    width: 120px;
+    font-size: 16px;
+    font-weight: 500;
+    max-lines: 1;
+}
+
+.value {
+    width: 180px;
+    font-size: 16px;
+    font-weight: 400;
+    max-lines: 2;
+}
+
+.change-password-btn {
+    background-color: #175ead;
+    color: white !important;
+    border: none;
+    border-radius: 12px;
+    padding: 8.5px 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    width: fit-content;
+    height: fit-content;
+    transition: background-color 0.2s;
+}
+
+/* .change-password-btn:hover {
+    background-color: #0056b3;
+} */
+
+.additional-info {
+    margin-top: 20px;
+}
